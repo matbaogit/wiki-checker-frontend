@@ -20,9 +20,9 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 // Hard-coded user credentials with roles
 const VALID_USERS = [
-  { username: 'admin', password: '123456', role: 'admin' as UserRole },
-  { username: 'user', password: 'password', role: 'user' as UserRole },
-  { username: 'checker', password: '123456', role: 'user' as UserRole }
+  { username: 'admin', password: 'mb@834228', role: 'admin' as UserRole },
+  { username: 'user', password: 'mb@834228', role: 'user' as UserRole },
+  { username: 'checker', password: 'mb@834228', role: 'user' as UserRole }
 ];
 
 export const useAuth = () => {
