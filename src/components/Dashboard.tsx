@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -137,14 +136,38 @@ const Dashboard: React.FC = () => {
         }) : undefined,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
+      // Try to parse the response even if it's an error
+      let responseData;
+      try {
+        responseData = await response.json();
+        console.log('Response data:', responseData);
+      } catch (parseError) {
+        console.log('Failed to parse response as JSON:', parseError);
+        responseData = null;
       }
 
-      const data = await response.json();
-      console.log('Webhook response:', data);
-      
-      setResult(data);
+      if (!response.ok) {
+        // Show detailed error information from the webhook
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        
+        if (responseData) {
+          if (responseData.message) {
+            errorMessage = `Webhook Error: ${responseData.message}`;
+          } else if (responseData.error) {
+            errorMessage = `Webhook Error: ${responseData.error}`;
+          }
+          
+          // Also show the full error response for debugging
+          console.log('Full error response:', responseData);
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      setResult(responseData);
       toast({
         title: "Thành công",
         description: "Đã kiểm tra bài viết thành công",
@@ -154,9 +177,13 @@ const Dashboard: React.FC = () => {
       console.error('Error calling webhook:', err);
       const errorMessage = err instanceof Error ? err.message : 'Có lỗi xảy ra khi kiểm tra bài viết';
       setError(errorMessage);
+      
+      // Show more detailed error information in toast
       toast({
-        title: "Lỗi",
-        description: errorMessage,
+        title: "Lỗi Webhook",
+        description: errorMessage.includes('Workflow Webhook Error') 
+          ? "N8N workflow không thể khởi động. Vui lòng kiểm tra cấu hình workflow trong n8n."
+          : errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -324,7 +351,23 @@ const Dashboard: React.FC = () => {
               {error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription>
+                    <div className="space-y-2">
+                      <div className="font-medium">Chi tiết lỗi:</div>
+                      <div className="text-sm">{error}</div>
+                      {error.includes('Workflow Webhook Error') && (
+                        <div className="text-sm mt-2 p-2 bg-red-50 rounded border">
+                          <strong>Gợi ý khắc phục:</strong>
+                          <ul className="list-disc list-inside mt-1 space-y-1">
+                            <li>Kiểm tra workflow trong n8n có đang hoạt động không</li>
+                            <li>Đảm bảo webhook trigger được cấu hình đúng</li>
+                            <li>Kiểm tra các node trong workflow có lỗi không</li>
+                            <li>Thử test workflow trực tiếp trong n8n</li>
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </AlertDescription>
                 </Alert>
               )}
             </CardContent>
