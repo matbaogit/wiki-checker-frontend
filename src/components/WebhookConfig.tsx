@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Settings, Wifi } from 'lucide-react';
+import { Settings, Wifi, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { saveWebhookConfig, loadWebhookConfig, type WebhookConfig } from '../config/webhookConfig';
 
@@ -17,6 +18,7 @@ const WebhookConfig: React.FC<WebhookConfigProps> = ({ onConfigChange }) => {
   const [webhookUrl, setWebhookUrl] = useState('');
   const [httpMethod, setHttpMethod] = useState('POST');
   const [isTesting, setIsTesting] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Load saved configuration on mount
   useEffect(() => {
@@ -28,20 +30,29 @@ const WebhookConfig: React.FC<WebhookConfigProps> = ({ onConfigChange }) => {
     }
   }, [onConfigChange]);
 
-  // Save webhook URL to file when it changes
+  // Handle webhook URL change without auto-saving
   const handleWebhookUrlChange = (value: string) => {
     setWebhookUrl(value);
-    const config = { url: value, method: httpMethod };
-    saveWebhookConfig(config);
-    onConfigChange(config);
+    setHasUnsavedChanges(true);
   };
 
-  // Save HTTP method to file when it changes
+  // Handle HTTP method change without auto-saving
   const handleHttpMethodChange = (value: string) => {
     setHttpMethod(value);
-    const config = { url: webhookUrl, method: value };
+    setHasUnsavedChanges(true);
+  };
+
+  // Save configuration explicitly
+  const handleSaveConfiguration = () => {
+    const config = { url: webhookUrl, method: httpMethod };
     saveWebhookConfig(config);
     onConfigChange(config);
+    setHasUnsavedChanges(false);
+    
+    toast({
+      title: "Thành công",
+      description: "Cấu hình webhook đã được lưu thành công",
+    });
   };
 
   const handleTestConnection = async () => {
@@ -136,24 +147,35 @@ const WebhookConfig: React.FC<WebhookConfigProps> = ({ onConfigChange }) => {
           </p>
         </div>
 
-        <Button 
-          onClick={handleTestConnection}
-          disabled={isTesting || !webhookUrl.trim()}
-          variant="outline"
-          className="w-full"
-        >
-          {isTesting ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-              Đang test kết nối...
-            </>
-          ) : (
-            <>
-              <Wifi className="h-4 w-4 mr-2" />
-              Test Connect
-            </>
-          )}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleSaveConfiguration}
+            disabled={!hasUnsavedChanges}
+            className="flex-1 bg-green-600 hover:bg-green-700"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Lưu cấu hình
+          </Button>
+          
+          <Button 
+            onClick={handleTestConnection}
+            disabled={isTesting || !webhookUrl.trim()}
+            variant="outline"
+            className="flex-1"
+          >
+            {isTesting ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                Đang test kết nối...
+              </>
+            ) : (
+              <>
+                <Wifi className="h-4 w-4 mr-2" />
+                Test Connect
+              </>
+            )}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
