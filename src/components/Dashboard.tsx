@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { LogOut, Search, Settings, CheckCircle, AlertCircle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { LogOut, Search, Settings, CheckCircle, AlertCircle, Wifi } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface WebhookResponse {
@@ -19,15 +20,21 @@ const Dashboard: React.FC = () => {
   const { toast } = useToast();
   const [wikiUrl, setWikiUrl] = useState('');
   const [webhookUrl, setWebhookUrl] = useState('');
+  const [httpMethod, setHttpMethod] = useState('POST');
   const [isChecking, setIsChecking] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
   const [result, setResult] = useState<WebhookResponse | null>(null);
   const [error, setError] = useState('');
 
-  // Load webhook URL from localStorage on mount
+  // Load saved settings from localStorage on mount
   useEffect(() => {
     const savedWebhookUrl = localStorage.getItem('wiki_checker_webhook_url');
+    const savedHttpMethod = localStorage.getItem('wiki_checker_http_method');
     if (savedWebhookUrl) {
       setWebhookUrl(savedWebhookUrl);
+    }
+    if (savedHttpMethod) {
+      setHttpMethod(savedHttpMethod);
     }
   }, []);
 
@@ -35,6 +42,61 @@ const Dashboard: React.FC = () => {
   const handleWebhookUrlChange = (value: string) => {
     setWebhookUrl(value);
     localStorage.setItem('wiki_checker_webhook_url', value);
+  };
+
+  // Save HTTP method to localStorage when it changes
+  const handleHttpMethodChange = (value: string) => {
+    setHttpMethod(value);
+    localStorage.setItem('wiki_checker_http_method', value);
+  };
+
+  const handleTestConnection = async () => {
+    if (!webhookUrl.trim()) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng nhập URL webhook trước khi test",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsTesting(true);
+    console.log('Testing webhook connection:', webhookUrl, 'Method:', httpMethod);
+
+    try {
+      const response = await fetch(webhookUrl, {
+        method: httpMethod,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: httpMethod !== 'GET' ? JSON.stringify({
+          test: true,
+          timestamp: new Date().toISOString()
+        }) : undefined,
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Thành công",
+          description: `Webhook kết nối thành công (${response.status})`,
+        });
+      } else {
+        toast({
+          title: "Cảnh báo",
+          description: `Webhook phản hồi với status ${response.status}`,
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error('Error testing webhook connection:', err);
+      toast({
+        title: "Lỗi",
+        description: "Không thể kết nối đến webhook. Vui lòng kiểm tra URL.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   const handleCheckArticle = async () => {
@@ -63,15 +125,16 @@ const Dashboard: React.FC = () => {
     try {
       console.log('Sending request to webhook:', webhookUrl);
       console.log('Wiki URL to check:', wikiUrl);
+      console.log('HTTP Method:', httpMethod);
 
       const response = await fetch(webhookUrl, {
-        method: 'POST',
+        method: httpMethod,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
+        body: httpMethod !== 'GET' ? JSON.stringify({
           url: wikiUrl.trim()
-        }),
+        }) : undefined,
       });
 
       if (!response.ok) {
@@ -158,7 +221,7 @@ const Dashboard: React.FC = () => {
                 Cấu hình Webhook
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="webhook-url">URL Webhook n8n</Label>
                 <Input
@@ -173,6 +236,44 @@ const Dashboard: React.FC = () => {
                   Nhập URL webhook của n8n để gửi yêu cầu kiểm tra bài viết
                 </p>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="http-method">HTTP Method</Label>
+                <Select value={httpMethod} onValueChange={handleHttpMethodChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Chọn HTTP method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="GET">GET</SelectItem>
+                    <SelectItem value="POST">POST</SelectItem>
+                    <SelectItem value="PUT">PUT</SelectItem>
+                    <SelectItem value="DELETE">DELETE</SelectItem>
+                    <SelectItem value="PATCH">PATCH</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">
+                  Chọn phương thức HTTP để gửi request đến webhook
+                </p>
+              </div>
+
+              <Button 
+                onClick={handleTestConnection}
+                disabled={isTesting || !webhookUrl.trim()}
+                variant="outline"
+                className="w-full"
+              >
+                {isTesting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                    Đang test kết nối...
+                  </>
+                ) : (
+                  <>
+                    <Wifi className="h-4 w-4 mr-2" />
+                    Test Connect
+                  </>
+                )}
+              </Button>
             </CardContent>
           </Card>
 
