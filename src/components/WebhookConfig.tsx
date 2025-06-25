@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Settings, Wifi } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { saveWebhookConfig, loadWebhookConfig, WebhookConfig } from '../config/webhookConfig';
+import { saveWebhookConfig, loadWebhookConfig, type WebhookConfig } from '../config/webhookConfig';
 
 interface WebhookConfigProps {
   onConfigChange: (config: WebhookConfig) => void;
