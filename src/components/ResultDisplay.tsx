@@ -12,8 +12,14 @@ interface ResultDisplayProps {
 const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
   if (!result) return null;
 
-  // Extract main content from the result
-  const output = result.output || '';
+  // Handle array response from webhook
+  let output = '';
+  if (Array.isArray(result) && result.length > 0 && result[0].output) {
+    output = result[0].output;
+  } else if (result.output) {
+    output = result.output;
+  }
+
   const hasContent = output && output.trim().length > 0;
 
   // Parse different sections from the output
@@ -28,16 +34,19 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
     for (const line of lines) {
       const trimmedLine = line.trim();
       
-      if (trimmedLine.includes('**') || trimmedLine.includes('*')) {
+      if (trimmedLine.includes('**') || trimmedLine.includes('*') || trimmedLine.includes('###') || trimmedLine.includes('####')) {
         // This looks like a heading or important text
         if (currentSection.content.length > 0) {
           sections.push(currentSection);
-          currentSection = { title: trimmedLine.replace(/\*/g, '').trim(), content: [] };
+          currentSection = { title: trimmedLine.replace(/[*#]/g, '').trim(), content: [] };
         } else {
-          currentSection.title = trimmedLine.replace(/\*/g, '').trim();
+          currentSection.title = trimmedLine.replace(/[*#]/g, '').trim();
         }
-      } else if (trimmedLine.length > 0) {
+      } else if (trimmedLine.length > 0 && !trimmedLine.startsWith('-')) {
         currentSection.content.push(trimmedLine);
+      } else if (trimmedLine.startsWith('-')) {
+        // Handle bullet points
+        currentSection.content.push(trimmedLine.substring(1).trim());
       }
     }
     
