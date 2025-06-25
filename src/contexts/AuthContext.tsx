@@ -1,8 +1,11 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+export type UserRole = 'admin' | 'user';
+
 interface User {
   username: string;
+  role: UserRole;
 }
 
 interface AuthContextType {
@@ -10,14 +13,16 @@ interface AuthContextType {
   login: (username: string, password: string) => boolean;
   logout: () => void;
   isAuthenticated: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Hard-coded user credentials
+// Hard-coded user credentials with roles
 const VALID_USERS = [
-  { username: 'admin', password: '123456' },
-  { username: 'user', password: 'password' }
+  { username: 'admin', password: '123456', role: 'admin' as UserRole },
+  { username: 'user', password: 'password', role: 'user' as UserRole },
+  { username: 'checker', password: '123456', role: 'user' as UserRole }
 ];
 
 export const useAuth = () => {
@@ -49,7 +54,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     );
     
     if (validUser) {
-      const userData = { username: validUser.username };
+      const userData = { username: validUser.username, role: validUser.role };
       setUser(userData);
       localStorage.setItem('wiki_checker_user', JSON.stringify(userData));
       return true;
@@ -64,12 +69,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const isAuthenticated = !!user;
+  const isAdmin = user?.role === 'admin';
 
   const value = {
     user,
     login,
     logout,
-    isAuthenticated
+    isAuthenticated,
+    isAdmin
   };
 
   return (

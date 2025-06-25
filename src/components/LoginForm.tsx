@@ -93,8 +93,9 @@ const LoginForm: React.FC = () => {
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
             <p className="text-sm text-gray-600 font-medium mb-2">Tài khoản demo:</p>
             <div className="text-xs text-gray-500 space-y-1">
-              <p>• admin / 123456</p>
-              <p>• user / password</p>
+              <p>• <span className="font-medium">admin</span> / 123456 (Quản trị viên - có thể cấu hình webhook)</p>
+              <p>• <span className="font-medium">user</span> / password (Người dùng - chỉ kiểm tra bài viết)</p>
+              <p>• <span className="font-medium">checker</span> / 123456 (Người dùng - chỉ kiểm tra bài viết)</p>
             </div>
           </div>
         </CardContent>
