@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -27,12 +26,10 @@ const Dashboard: React.FC = () => {
   const [result, setResult] = useState<WebhookResponse | null>(null);
   const [error, setError] = useState('');
 
-  // Load webhook config on mount
+  // Load webhook config on mount - now always returns hardcoded config
   useEffect(() => {
-    const savedConfig = loadWebhookConfig();
-    if (savedConfig) {
-      setWebhookConfig(savedConfig);
-    }
+    const config = loadWebhookConfig();
+    setWebhookConfig(config);
   }, []);
 
   const handleWebhookConfigChange = (config: WebhookConfigType) => {
@@ -44,15 +41,6 @@ const Dashboard: React.FC = () => {
       toast({
         title: "Lỗi",
         description: "Vui lòng nhập link bài viết Wiki",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!webhookConfig?.url.trim()) {
-      toast({
-        title: "Lỗi", 
-        description: "Chưa có cấu hình webhook. Vui lòng liên hệ admin để cấu hình.",
         variant: "destructive",
       });
       return;
@@ -197,21 +185,11 @@ const Dashboard: React.FC = () => {
                 </p>
               </div>
 
-              {!webhookConfig?.url && (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    {isAdmin 
-                      ? "Vui lòng cấu hình webhook ở phía trên trước khi kiểm tra bài viết."
-                      : "Chưa có cấu hình webhook. Vui lòng liên hệ admin để cấu hình hệ thống."
-                    }
-                  </AlertDescription>
-                </Alert>
-              )}
-
+              {/* Remove the webhook config warning since it's now always configured */}
+              
               <Button 
                 onClick={handleCheckArticle}
-                disabled={isChecking || !wikiUrl.trim() || !webhookConfig?.url.trim()}
+                disabled={isChecking || !wikiUrl.trim()}
                 className="w-full bg-teal-600 hover:bg-teal-700"
               >
                 {isChecking ? (
