@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LogOut, Search, Settings, CheckCircle, AlertCircle, Wifi } from 'lucide-react';
+import { LogOut, Search, Settings, AlertCircle, Wifi } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import ResultDisplay from './ResultDisplay';
 
 interface WebhookResponse {
   [key: string]: any;
@@ -191,28 +192,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const renderResult = () => {
-    if (!result) return null;
-
-    return (
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            Kết quả kiểm tra
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-auto">
-            <pre className="text-sm text-gray-700 whitespace-pre-wrap">
-              {JSON.stringify(result, null, 2)}
-            </pre>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
@@ -373,8 +352,8 @@ const Dashboard: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Results */}
-          {renderResult()}
+          {/* Results - Updated to use new component */}
+          <ResultDisplay result={result} />
         </div>
       </main>
     </div>
